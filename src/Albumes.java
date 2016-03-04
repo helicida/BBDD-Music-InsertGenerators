@@ -84,7 +84,7 @@ public class Albumes {
 
     public static String getJSON(String URLtoRead)  {
 
-        try  {
+        try {
             StringBuilder stringJSON = new StringBuilder();
             URL url = new URL(URLtoRead);
             HttpURLConnection connection = (HttpURLConnection) url.openConnection();

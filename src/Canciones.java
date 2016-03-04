@@ -44,6 +44,7 @@ public class Canciones {
 
     // Variables de clase
     static String idCancion = "";
+    static String searchURL = "http://api.vagalume.com.br/search.php?musid=";
     static String urlCancion = "http://api.vagalume.com.br/search.php?musid=" + idCancion;
     private static String url = "http://www.vagalume.com.br/" + nombreArtista + "/discografia/index.js";
 
@@ -70,9 +71,10 @@ public class Canciones {
                 "-- -----------------------------------------------------\n" +
                         "-- Table `FeatherLyricsBBDD`.`canciones`\n" +
                         "-- -----------------------------------------------------\n\n";
-
+        int cont1 = 0;
+        int cont2 = 0;
         for (int iterador = 0; iterador < ARRAY_ALBUMS.size(); iterador++) {
-
+            System.out.println("for1: " + cont1);
             JSONObject album = (JSONObject) JSONValue.parse(ARRAY_ALBUMS.get(iterador).toString());
 
             String nombreAlbum = album.get("desc").toString();
@@ -89,24 +91,31 @@ public class Canciones {
 
 
             System.out.println("DISCOS:");
+            cont1++;
 
 
             for (int iteradorCanciones = 0; iteradorCanciones < ARRAY_DISCS.size(); iteradorCanciones++) {
-
+                System.out.println("for2: " + cont2);
                 // Sacamos la id de cada cancion
                 JSONObject SELECTED_DISC = (JSONObject) JSONValue.parse(ARRAY_DISCS.get(iteradorCanciones).toString());
                 idCancion = SELECTED_DISC.get("id").toString();
-                String nombreCancion = SELECTED_DISC.get("desc").toString();
 
+                urlCancion = searchURL + idCancion;
                 System.out.println(urlCancion);
+
+                try {
+                    Thread.sleep(2000);
+                } catch (InterruptedException e) {
+                    e.printStackTrace();
+                }
 
                 // Canciones
                 JSONObject objeto = (JSONObject) JSONValue.parse(getJSON(urlCancion));
-                JSONArray arrayCancion = (JSONArray) JSONValue.parse(objeto.get("mus").toString());
-                JSONObject letraCancion = (JSONObject) JSONValue.parse(arrayCancion.get(4).toString());
-
-
-                System.out.println();
+                JSONArray mus = (JSONArray) JSONValue.parse(objeto.get("mus").toString());
+                JSONObject arraySinSentido = (JSONObject) JSONValue.parse(mus.get(0).toString());
+                String letraCancion = arraySinSentido.get("text").toString();
+                System.out.println(letraCancion);
+                cont2++;
             }
         }
 
