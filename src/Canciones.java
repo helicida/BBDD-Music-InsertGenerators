@@ -105,14 +105,13 @@ public class Canciones {
 
                 insertsAlbumes = insertsAlbumes + "\n";
 
-                insertsAlbumes = insertsAlbumes +
+                insertsAlbumes =
                         "INSERT INTO albumes(id_Album, Nombre_Album, Anyo_Album, Duracion_Album, Grupo_id, Genero_Nombre)\n" +
                         "VALUES ('" + (numeroDeAlbums + iteradorAlbumes + 1) + "', '" + nombreAlbum + "', '" + anyoAlbum + "', '58:31', '" + idArtista + "', '" + genero + "');" + "\n";
 
 
-                System.out.println("DISCOS:");
+                System.out.println(insertsAlbumes);
                 cont1 = iteradorAlbumes;
-
 
                 for (int iteradorCanciones = contadorCanciones; iteradorCanciones < ARRAY_DISCS.size(); iteradorCanciones++) {
 
@@ -177,6 +176,18 @@ public class Canciones {
         } catch (Exception one) {
             return "getJSON() didn't work, you are in the Catch block!";
         }
+    }
+
+    public static String formateoComillas (String frase){
+
+        // Las comillas y algunos caracteres que pueden hacer petar el programa. Lo paliamos con este método.
+
+        String comillas = "\'";
+
+        if (frase.contains(comillas)) {
+            frase = frase.replace(comillas,"\"");
+        }
+        return frase;
     }
 
     public static void crea(File fitxer) {
