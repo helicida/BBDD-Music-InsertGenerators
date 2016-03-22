@@ -1,10 +1,8 @@
 import org.json.simple.JSONArray;
 import org.json.simple.JSONObject;
 import org.json.simple.JSONValue;
-import java.io.BufferedReader;
-import java.io.File;
-import java.io.IOException;
-import java.io.InputStreamReader;
+
+import java.io.*;
 import java.net.HttpURLConnection;
 import java.net.URL;
 
@@ -18,6 +16,7 @@ import java.io.IOException;
 import java.io.InputStreamReader;
 import java.net.HttpURLConnection;
 import java.net.URL;
+import java.util.function.BiFunction;
 
 /**
  * Created by sergi on 24/11/15.
@@ -27,16 +26,19 @@ public class Canciones {
     // COMO HACER FUNCIONAR ESTA CLASE:
 
     //1 -> introducir el nombre de artista
-    public static String nombreArtista = "Iron Maiden";
+    public static String nombreArtista = "Bruce Dickinson";
 
     //2 -> Antes de generar los inserts, hay que saber cuantos albumes hay ya insertados para saber a partir de que número empezar
-    public static int numeroDeAlbums = 54;
+    public static int numeroDeAlbums = 58;
 
-    //3 -> Introduce el genero del artista
+    //3 -> IDEM con las canciones
+    static int numeroCanciones = 592;
+
+    //4 -> Introduce el genero del artista
     public static String genero = "heavy metal";
 
-    //4 -> EL valor de id artista va estipulado en el siguiente gráfico:
-    public static int idArtista = 4;
+    //5 -> EL valor de id artista va estipulado en el siguiente gráfico:
+    public static int idArtista = 5;
 
     //Grupos:
     //-------------------------
@@ -51,9 +53,11 @@ public class Canciones {
     //                  -> 9
     //                  -> 10
 
-    //5 -> Ejecutar y disfrutar :D
+    //6 -> Ejecutar y disfrutar :D
 
     // Variables de clase
+    static File archivo = new File("C:\\Users\\Sergi\\Desktop\\inserts.sql");
+    static String tituloCancion = "";
     static String idCancion = "";
     static String apiKey = "&apikey=754f223018be007a45003e3b87877bac";     // Key de Vagalume. Máximo 100.000 peticiones /dia
     static String searchURL = "http://api.vagalume.com.br/search.php?musid=";
@@ -61,9 +65,10 @@ public class Canciones {
     static String url = "http://www.vagalume.com.br/" + nombreArtista + "/discografia/index.js";
     static int cont1 = 0;
     static int cont2 = 0;
-    static int numeroCanciones = 0;
+
 
     public static void main(String[] args) {
+        crea(archivo);
         generateInserts(cont1, cont2);
     }
 
@@ -79,8 +84,6 @@ public class Canciones {
 
         // Canciones
 
-        int numeroDeAlbums = 54;
-
         String insertsAlbumes =
                 "-- -----------------------------------------------------\n" +
                         "-- Table `FeatherLyricsBBDD`.`Albumes`\n" +
@@ -93,40 +96,40 @@ public class Canciones {
 
         try {
 
-
             for (int iteradorAlbumes = conadorAlbumes; iteradorAlbumes < ARRAY_ALBUMS.size(); iteradorAlbumes++) {
                 JSONObject album = (JSONObject) JSONValue.parse(ARRAY_ALBUMS.get(iteradorAlbumes).toString());
 
                 String nombreAlbum = album.get("desc").toString();
+                nombreAlbum = formateoComillas(nombreAlbum);
                 String anyoAlbum = album.get("published").toString();
 
                 JSONArray ENESTEJSONHAYUNARRAYSINSENTIDO = (JSONArray) JSONValue.parse(album.get("discs").toString());
                 JSONArray ARRAY_DISCS = (JSONArray) JSONValue.parse(ENESTEJSONHAYUNARRAYSINSENTIDO.get(0).toString());
 
-                insertsAlbumes = insertsAlbumes + "\n";
-
                 insertsAlbumes =
                         "INSERT INTO albumes(id_Album, Nombre_Album, Anyo_Album, Duracion_Album, Grupo_id, Genero_Nombre)\n" +
                         "VALUES ('" + (numeroDeAlbums + iteradorAlbumes + 1) + "', '" + nombreAlbum + "', '" + anyoAlbum + "', '58:31', '" + idArtista + "', '" + genero + "');" + "\n";
 
-
+                // Mostramos por pantalla los inserts a la vez que los escribimos en un fichero
                 System.out.println(insertsAlbumes);
+                escribir(archivo, insertsAlbumes + "\n");
+
                 cont1 = iteradorAlbumes;
 
                 for (int iteradorCanciones = contadorCanciones; iteradorCanciones < ARRAY_DISCS.size(); iteradorCanciones++) {
 
-                    System.out.println("------------------------------------------");
+                    /*System.out.println("------------------------------------------");
                     System.out.println("Numero de albumes " + cont1);
                     System.out.println("Numero de canciones del album " + cont2);
                     System.out.println("Numero de canciones totales: " + numeroCanciones);
-                    System.out.println("------------------------------------------");
+                    System.out.println("------------------------------------------");*/
 
                     // Sacamos la id de cada cancion
                     JSONObject SELECTED_DISC = (JSONObject) JSONValue.parse(ARRAY_DISCS.get(iteradorCanciones).toString());
                     idCancion = SELECTED_DISC.get("id").toString();
-
                     urlCancion = searchURL + idCancion + apiKey;
-                    System.out.println(urlCancion);
+
+                    // System.out.println(urlCancion);
 
                     try {
                         Thread.sleep(2000);
@@ -139,7 +142,17 @@ public class Canciones {
                     JSONArray mus = (JSONArray) JSONValue.parse(objeto.get("mus").toString());
                     JSONObject arraySinSentido = (JSONObject) JSONValue.parse(mus.get(0).toString());
                     String letraCancion = arraySinSentido.get("text").toString();
-                    System.out.println(letraCancion);
+                    letraCancion = formateoComillas(letraCancion);
+                    String tituloCancion = arraySinSentido.get("name").toString();
+                    tituloCancion = formateoComillas(tituloCancion);
+
+                    String insertCanciones =
+                            "INSERT INTO canciones(id_Cancion, Titulo_Cancion, Letra, Album_id,  Grupo_id)\n" +
+                                    "VALUES ('" + numeroCanciones + "', '" + tituloCancion + "', '" + letraCancion + "', '" + (numeroDeAlbums + iteradorAlbumes + 1) + "', '" + idArtista + "');" + "\n";
+
+                    // Mostramos por pantalla los inserts a la vez que los escribimos en un fichero
+                    System.out.println(insertCanciones);
+                    escribir(archivo, insertCanciones + "\n");
 
                     cont2 = iteradorCanciones;
                     numeroCanciones++;
@@ -193,11 +206,16 @@ public class Canciones {
     public static void crea(File fitxer) {
 
         if (fitxer.exists()) {
+
+            System.out.println("----------------------------------------------------------");
+            System.out.println("El arxiu existent amb el mateix nom i ruta s'eliminarà");
+
             fitxer.delete();
         }
-
-        System.out.println("----------------------------------------------------------");
-        System.out.println("El arxiu especificat no existeix, es creara automaticament");
+        else{
+            System.out.println("----------------------------------------------------------");
+            System.out.println("El arxiu especificat no existeix, es creara automaticament");
+        }
 
         try {
             // A partir del objecte file creem el fitxer fisicament
@@ -210,5 +228,19 @@ public class Canciones {
             ioe.printStackTrace();
         }
         System.out.println("---------------------------------------------");
+    }
+
+    public static void escribir(File fitxer, String textoAEscribir){
+
+        BufferedWriter bw;
+
+        try {
+            // True indica que escribiremos sin eliminar el contenido del fichero, es decir, sin sobreescribir lo que hay escrito
+            bw = new BufferedWriter(new FileWriter(fitxer, true));
+            bw.write(textoAEscribir + "\n");
+            bw.close();
+        } catch (IOException e) {
+            e.printStackTrace();
+        }
     }
 }
