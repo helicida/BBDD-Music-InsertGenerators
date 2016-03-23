@@ -55,19 +55,20 @@ public class Canciones {
 
     //6 -> Ejecutar y disfrutar :D
 
-    // Variables de clase
-    static File archivo = new File("C:\\Users\\Sergi\\Desktop\\inserts.sql");
-    static String tituloCancion = "";
-    static String idCancion = "";
-    static String apiKey = "&apikey=754f223018be007a45003e3b87877bac";     // Key de Vagalume. Máximo 100.000 peticiones /dia
-    static String searchURL = "http://api.vagalume.com.br/search.php?musid=";
-    static String urlCancion = "http://api.vagalume.com.br/search.php?musid=" + idCancion;
-    static String url = "http://www.vagalume.com.br/" + nombreArtista + "/discografia/index.js";
-    static int cont1 = 0;
-    static int cont2 = 0;
+    // Variables auxiliares que podemos necesitar para extraer información o contar
+    static File archivo = new File("C:\\Users\\Sergi\\Desktop\\inserts.sql");   // Ruta en la que se genererará el archivo con los inserts
+    static String tituloCancion = "";                                           // En cada iteración en canciones, tendremos su titulo almacenado aquí
+    static String idCancion = "";                                               // Id de cada cancion que extraeremos de los albumes. Con ella compondremos la URL de la canción de la que podremos extraer la letra
+    static String apiKey = "&apikey=754f223018be007a45003e3b87877bac";          // Key de Vagalume. Máximo 100.000 peticiones /dia
+    static String searchURL = "http://api.vagalume.com.br/search.php?musid=";   // primea parte del link
+    static String urlCancion = "http://api.vagalume.com.br/search.php?musid=" + idCancion;  // URL de la canción mostrada
+    static String url = "http://www.vagalume.com.br/" + nombreArtista + "/discografia/index.js"; // URL de la discografía de un artista de la cual extraemos los albumes y las ID de las canciones
+    static int cont1 = 0;   // Contador de albumes
+    static int cont2 = 0;   // Contador de canciones
 
 
     public static void main(String[] args) {
+        // Creamos los archivos en los que escribiremos los inserts después los generamos y guardamos
         crea(archivo);
         generateInserts(cont1, cont2);
     }
@@ -84,16 +85,6 @@ public class Canciones {
 
         // Canciones
 
-        String insertsAlbumes =
-                "-- -----------------------------------------------------\n" +
-                        "-- Table `FeatherLyricsBBDD`.`Albumes`\n" +
-                        "-- -----------------------------------------------------\n";
-
-        String insertsCanciones =
-                "-- -----------------------------------------------------\n" +
-                        "-- Table `FeatherLyricsBBDD`.`canciones`\n" +
-                        "-- -----------------------------------------------------\n\n";
-
         try {
 
             for (int iteradorAlbumes = conadorAlbumes; iteradorAlbumes < ARRAY_ALBUMS.size(); iteradorAlbumes++) {
@@ -106,7 +97,7 @@ public class Canciones {
                 JSONArray ENESTEJSONHAYUNARRAYSINSENTIDO = (JSONArray) JSONValue.parse(album.get("discs").toString());
                 JSONArray ARRAY_DISCS = (JSONArray) JSONValue.parse(ENESTEJSONHAYUNARRAYSINSENTIDO.get(0).toString());
 
-                insertsAlbumes =
+                String insertsAlbumes =
                         "INSERT INTO albumes(id_Album, Nombre_Album, Anyo_Album, Duracion_Album, Grupo_id, Genero_Nombre)\n" +
                         "VALUES ('" + (numeroDeAlbums + iteradorAlbumes + 1) + "', '" + nombreAlbum + "', '" + anyoAlbum + "', '58:31', '" + idArtista + "', '" + genero + "');" + "\n";
 
@@ -128,8 +119,6 @@ public class Canciones {
                     JSONObject SELECTED_DISC = (JSONObject) JSONValue.parse(ARRAY_DISCS.get(iteradorCanciones).toString());
                     idCancion = SELECTED_DISC.get("id").toString();
                     urlCancion = searchURL + idCancion + apiKey;
-
-                    // System.out.println(urlCancion);
 
                     try {
                         Thread.sleep(2000);
@@ -158,7 +147,7 @@ public class Canciones {
                     numeroCanciones++;
                 }
             }
-            // System.out.println(insertsAlbumes);
+
         } catch (NullPointerException a) {
             cont2 = 0;
             cont1++;
@@ -193,8 +182,7 @@ public class Canciones {
 
     public static String formateoComillas (String frase){
 
-        // Las comillas y algunos caracteres que pueden hacer petar el programa. Lo paliamos con este método.
-
+        // Las comillas y algunos caracteres que pueden provocar errores de sintaxis en SQL. Lo paliamos con este metodo.
         String comillas = "\'";
 
         if (frase.contains(comillas)) {
@@ -205,11 +193,11 @@ public class Canciones {
 
     public static void crea(File fitxer) {
 
-        if (fitxer.exists()) {
+        // Con este metodo creamos un archivo. CUIDADO -> Si detecta uno en su lugar lo elimina
 
+        if (fitxer.exists()) {
             System.out.println("----------------------------------------------------------");
             System.out.println("El arxiu existent amb el mateix nom i ruta s'eliminarà");
-
             fitxer.delete();
         }
         else{
@@ -232,12 +220,18 @@ public class Canciones {
 
     public static void escribir(File fitxer, String textoAEscribir){
 
-        BufferedWriter bw;
+        // Método para facilitar la escritura en un archivo
+
+        BufferedWriter bw;  // BufferedWriter que usaremos para escribir en el file
 
         try {
             // True indica que escribiremos sin eliminar el contenido del fichero, es decir, sin sobreescribir lo que hay escrito
             bw = new BufferedWriter(new FileWriter(fitxer, true));
+
+            // Escribimos el texto en el archivo
             bw.write(textoAEscribir + "\n");
+
+            // Cerramos el buffer
             bw.close();
         } catch (IOException e) {
             e.printStackTrace();
